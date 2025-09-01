@@ -11,7 +11,6 @@ from config.config import ConfigJson
 from logger.logging_config import logger
 import yfinance as yf
 from pandas_datareader import data as pdr
-yf.pdr_override()
 
 def timestampchange(x):
     return datetime.datetime.strptime(x, '%Y-%m-%d').strftime('%Y%m%d')
@@ -29,12 +28,22 @@ class GetData:
         config = ConfigJson()
         config.get_account()
         self.tushare_token = config.tushare_token
-        ts.set_token(self.tushare_token)  # 设置token，只需设置一次
+        
+        # Initialize Tushare API with fallback mechanism
         if config.mjs_token:
+            # Use MJS token if available
             self.api = ts.pro_api(config.mjs_token)
             self.api._DataApi__http_url = 'http://tsapi.majors.ltd:7000'
+            logger.info("Using MJS token for Tushare API")
+        elif self.tushare_token:
+            # Use regular Tushare token if available
+            ts.set_token(self.tushare_token)
+            self.api = ts.pro_api()
+            logger.info("Using regular Tushare token")
         else:
-            self.api = ts.pro_api()  # 初始化接口
+            # No valid token available, initialize without token for testing
+            logger.warning("No valid Tushare token found. Some features may not work.")
+            self.api = ts.pro_api()
         self.country = country.lower()
         self.start_date =  start_date
         self.end_date = end_date
@@ -73,7 +82,7 @@ class GetData:
                 else:
                     code_tmp = '^' + code
 
-                data = pdr.get_data_yahoo(code_tmp, start=start_date, end=end_date)
+                data = yf.download(code_tmp, start=start_date, end=end_date)
                 data['code'] = code
                 data['date'] = data.index
                 result = pd.concat([result, data])

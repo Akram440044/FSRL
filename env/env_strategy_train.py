@@ -1,9 +1,9 @@
 import random
 
-import gym
+import gymnasium as gym
 import numpy as np
 import pandas as pd
-from gym import spaces
+from gymnasium import spaces
 
 from env.action.action import Action
 from env.observation.observation import Observation

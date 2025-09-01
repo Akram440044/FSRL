@@ -1,7 +1,14 @@
 import os
 
 import numpy as np
-from empyrical import *
+try:
+    from empyrical import *
+except ImportError:
+    try:
+        from empyrical_reloaded import *
+    except ImportError:
+        # Fallback if neither package is available
+        pass
 
 from logger.logging_config import logger
 
